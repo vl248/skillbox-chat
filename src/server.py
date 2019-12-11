@@ -18,9 +18,10 @@ class ServerProtocol(LineOnlyReceiver):
     logins: list = []
     content_log: list = []
 
-    def connectionMade(self):
-        # Потенциальный баг для внимательных =)
-        self.factory.clients.append(self)
+    # def connectionMade(self):
+    #      Потенциальный баг для внимательных =)
+    #      Незалогиненный юзер принимал сообщения, это этот "баг"? Или фича была?
+    #      self.factory.clients.append(self) - перенос на строку №47
 
     def connectionLost(self, reason=connectionDone):
         self.factory.clients.remove(self)
@@ -43,6 +44,7 @@ class ServerProtocol(LineOnlyReceiver):
                 self.login = content.replace("login:", "")
                 if self.login not in self.logins:
                     self.sendLine("Welcome you, ".encode() + self.login.encode())
+                    self.factory.clients.append(self)
                     self.logins.append(self.login)
                     self.send_history()
                 else:
@@ -54,6 +56,7 @@ class ServerProtocol(LineOnlyReceiver):
     def send_history(self):
         for history_line in self.content_log:
             self.sendLine(history_line.encode())
+
 
 class Server(ServerFactory):
     protocol = ServerProtocol
